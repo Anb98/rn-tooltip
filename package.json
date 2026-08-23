@@ -1,6 +1,6 @@
 {
   "name": "@anb98/rn-tooltip",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tooltip for React Native with auto positioning, viewport clamping and trigger-tracking arrow. No native code, no runtime dependencies.",
   "license": "MIT",
   "main": "./lib/commonjs/index.js",

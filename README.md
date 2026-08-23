@@ -47,7 +47,7 @@ A tooltip for React Native with automatic position selection, viewport clamping,
 
 3. Verify: pressing the trigger opens a modal tooltip near it; pressing outside the tooltip (or the Android back button) closes it.
 
-<img src="docs/default.png" width="200" alt="Zero-config tooltip with the default dark background, arrow, and radius" />
+<img src="docs/default.png" width="340" alt="Zero-config tooltip with the default dark background, arrow, and radius" />
 
 [Full runnable example](examples/Default.tsx)
 
@@ -92,7 +92,7 @@ A tooltip for React Native with automatic position selection, viewport clamping,
 </Tooltip>
 ```
 
-<img src="docs/custom-style.png" width="220" alt="Tooltip with a custom brand background color and an 80% width" />
+<img src="docs/custom-style.png" width="420" alt="Tooltip with a custom brand background color and an 80% width" />
 
 [Full runnable example](examples/CustomStyle.tsx)
 
@@ -113,7 +113,12 @@ A tooltip for React Native with automatic position selection, viewport clamping,
 </Tooltip>
 ```
 
-<img src="docs/positions.png" width="280" alt="Four tooltips, one per screen edge, each opening with room to fit" />
+<p>
+  <img src="docs/position-top.png" width="330" alt='Tooltip opening above its trigger with position="top"' />
+  <img src="docs/position-bottom.png" width="330" alt='Tooltip opening below its trigger with position="bottom"' />
+  <img src="docs/position-left.png" width="330" alt='Tooltip opening to the left of its trigger with position="left"' />
+  <img src="docs/position-right.png" width="330" alt='Tooltip opening to the right of its trigger with position="right"' />
+</p>
 
 [Full runnable example](examples/Positions.tsx)
 
@@ -133,7 +138,11 @@ A tooltip for React Native with automatic position selection, viewport clamping,
 </Tooltip>
 ```
 
-<img src="docs/arrow-alignments.png" width="280" alt="Three tooltips with start, center, and end arrow alignment" />
+<p>
+  <img src="docs/arrow-start.png" width="330" alt="Tooltip arrow aligned to the start of the trigger" />
+  <img src="docs/arrow-center.png" width="330" alt="Tooltip arrow centered on the trigger" />
+  <img src="docs/arrow-end.png" width="330" alt="Tooltip arrow aligned to the end of the trigger" />
+</p>
 
 [Full runnable example](examples/ArrowAlignments.tsx)
 
@@ -162,7 +171,7 @@ A tooltip for React Native with automatic position selection, viewport clamping,
 </Tooltip>
 ```
 
-<img src="docs/center-screen.png" width="280" alt="Wide banner tooltip centered on the screen while its arrow tracks a corner trigger" />
+<img src="docs/center-screen.png" width="480" alt="Wide banner tooltip centered on the screen while its arrow tracks a corner trigger" />
 
 [Full runnable example](examples/CenterByScreen.tsx)
 
@@ -206,7 +215,7 @@ const tooltipRef = useRef<TooltipRef>(null)
 </Tooltip>
 ```
 
-<img src="docs/rich-content.png" width="220" alt="Coachmark tooltip with a title, body text, and a Got it button that closes it" />
+<img src="docs/rich-content.png" width="300" alt="Coachmark tooltip with a title, body text, and a Got it button that closes it" />
 
 [Full runnable example](examples/RichContent.tsx)
 
@@ -214,7 +223,7 @@ const tooltipRef = useRef<TooltipRef>(null)
 
 When the trigger sits near a screen edge, the box clamps inside the viewport instead of overflowing, and the arrow shifts to keep pointing at the trigger.
 
-<img src="docs/edge-clamping.png" width="220" alt="Tooltip box clamped inside the viewport with the arrow shifted to keep pointing at a trigger pinned to the right edge" />
+<img src="docs/edge-clamping.png" width="340" alt="Tooltip box clamped inside the viewport with the arrow shifted to keep pointing at a trigger pinned to the right edge" />
 
 [Full runnable example](examples/EdgeClamping.tsx)
 
