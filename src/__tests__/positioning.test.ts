@@ -1,6 +1,8 @@
 import {
   ARROW_EDGE_OFFSET,
   ARROW_HALF_WIDTH,
+  ARROW_LENGTH,
+  ARROW_OVERLAP,
   BORDER_RADIUS,
   DEFAULT_WIDTH,
   Rect,
@@ -280,7 +282,7 @@ describe('computeArrowOffset', () => {
     const origin = computeBoxOrigin({ side: TooltipPosition.TOP, trigger, box, viewport, centerBy: 'tooltip', arrowAlignment: 'center' })
     const arrow = computeArrowOffset({ side: TooltipPosition.TOP, origin, box, trigger })
     expect(arrow.x).toBeCloseTo(box.width / 2 - ARROW_HALF_WIDTH)
-    expect(arrow.y).toBe(box.height)
+    expect(arrow.y).toBe(box.height - ARROW_OVERLAP)
   })
 
   it('unclamped start arrow sits at ARROW_EDGE_OFFSET - ARROW_HALF_WIDTH', () => {
@@ -323,14 +325,21 @@ describe('computeArrowOffset', () => {
     expect(arrow.x).toBe(tinyBox.width / 2 - ARROW_HALF_WIDTH)
   })
 
-  it('uses the vertical axis for LEFT/RIGHT, with box.width / -ARROW_LENGTH main-axis', () => {
+  it('uses the vertical axis for LEFT/RIGHT, with the main-axis sunk by ARROW_OVERLAP', () => {
     const origin = computeBoxOrigin({ side: TooltipPosition.LEFT, trigger, box, viewport, centerBy: 'tooltip', arrowAlignment: 'center' })
     const left = computeArrowOffset({ side: TooltipPosition.LEFT, origin, box, trigger })
-    expect(left.x).toBe(box.width)
+    expect(left.x).toBe(box.width - ARROW_OVERLAP)
     expect(left.y).toBeCloseTo(box.height / 2 - ARROW_HALF_WIDTH)
 
     const right = computeArrowOffset({ side: TooltipPosition.RIGHT, origin, box, trigger })
-    expect(right.x).toBe(-10)
+    expect(right.x).toBe(-ARROW_LENGTH + ARROW_OVERLAP)
+  })
+
+  it('sinks the arrow base under the box by ARROW_OVERLAP on TOP and BOTTOM', () => {
+    const arrowTop = computeArrowOffset({ side: TooltipPosition.TOP, origin: { x: 100, y: 290 }, box, trigger })
+    const arrowBottom = computeArrowOffset({ side: TooltipPosition.BOTTOM, origin: { x: 100, y: 450 }, box, trigger })
+    expect(arrowTop.y).toBe(box.height - ARROW_OVERLAP)
+    expect(arrowBottom.y).toBe(-ARROW_LENGTH + ARROW_OVERLAP)
   })
 })
 

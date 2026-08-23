@@ -1,7 +1,22 @@
-import { ReactNode, forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { LayoutChangeEvent, Modal, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
+import {
+  ReactNode,
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  LayoutChangeEvent,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
-import { measureElement } from './measure'
+import { measureElement, measureViewInWindow } from "./measure";
 import {
   ArrowAlignment,
   BORDER_RADIUS,
@@ -13,53 +28,56 @@ import {
   UnsafeWidth,
   arrowBorderStyle,
   layoutTooltip,
-  resolveWidth
-} from './positioning'
+  resolveWidth,
+} from "./positioning";
 
 // One discriminated-union phase replaces three independently-updated pieces
 // of state (visible / measure / position), which was the root cause of the
 // stale-position and first-frame-flicker bugs in the original implementation.
-type Phase = { kind: 'closed' } | { kind: 'measuring'; trigger: Rect } | { kind: 'ready'; trigger: Rect; content: Size }
+type Phase =
+  | { kind: "closed" }
+  | { kind: "measuring"; trigger: Rect }
+  | { kind: "ready"; trigger: Rect; content: Size };
 
 export type TooltipRef = {
-  open: () => void
-  close: () => void
-}
+  open: () => void;
+  close: () => void;
+};
 
 export type TooltipProps = {
-  content: ReactNode
-  children: ReactNode
-  width?: UnsafeWidth
-  backgroundColor?: string
-  position?: TooltipPosition
-  arrowAlignment?: ArrowAlignment
-  centerBy?: CenterBy
-  offset?: Offset
-  onChange?: (visible: boolean) => void
-}
+  content: ReactNode;
+  children: ReactNode;
+  width?: UnsafeWidth;
+  backgroundColor?: string;
+  position?: TooltipPosition;
+  arrowAlignment?: ArrowAlignment;
+  centerBy?: CenterBy;
+  offset?: Offset;
+  onChange?: (visible: boolean) => void;
+};
 
 const styles = StyleSheet.create({
   wrapper: {
-    flexDirection: 'row'
+    flexDirection: "row",
   },
   overlay: {
-    flex: 1
+    flex: 1,
   },
   tooltip: {
-    position: 'absolute',
+    position: "absolute",
     elevation: 3,
-    borderRadius: BORDER_RADIUS
+    borderRadius: BORDER_RADIUS,
   },
   arrow: {
-    position: 'absolute',
+    position: "absolute",
     width: 0,
     height: 0,
-    borderStyle: 'solid',
-    backgroundColor: 'transparent'
-  }
-})
+    borderStyle: "solid",
+    backgroundColor: "transparent",
+  },
+});
 
-const CONTENT_SIZE_EPSILON = 0.5
+const CONTENT_SIZE_EPSILON = 0.5;
 
 export const Tooltip = forwardRef<TooltipRef, TooltipProps>(
   (
@@ -67,123 +85,176 @@ export const Tooltip = forwardRef<TooltipRef, TooltipProps>(
       content,
       children,
       width,
-      backgroundColor = 'rgba(0,0,0,0.75)',
+      backgroundColor = "rgba(0,0,0,0.75)",
       position,
-      arrowAlignment = 'center',
-      centerBy = 'tooltip',
+      arrowAlignment = "center",
+      centerBy = "tooltip",
       offset,
-      onChange
+      onChange,
     },
-    ref
+    ref,
   ) => {
-    const [phase, setPhase] = useState<Phase>({ kind: 'closed' })
-    const triggerRef = useRef<View>(null)
-    const viewport = useWindowDimensions()
+    const [phase, setPhase] = useState<Phase>({ kind: "closed" });
 
-    const visible = phase.kind !== 'closed'
+    const [overlay, setOverlay] = useState<Rect | null>(null);
+    const triggerRef = useRef<View>(null);
+    const overlayRef = useRef<View>(null);
+    const viewport = useWindowDimensions();
+
+    const visible = phase.kind !== "closed";
 
     const openTooltip = useCallback(async () => {
-      const trigger = await measureElement(triggerRef)
-      if (!trigger) return
+      const trigger = await measureElement(triggerRef);
+      if (!trigger) return;
 
-      setPhase({ kind: 'measuring', trigger })
-      onChange?.(true)
-    }, [onChange])
+      setPhase({ kind: "measuring", trigger });
+      onChange?.(true);
+    }, [onChange]);
 
     const closeTooltip = useCallback(() => {
-      setPhase({ kind: 'closed' })
-      onChange?.(false)
-    }, [onChange])
+      setPhase({ kind: "closed" });
+      setOverlay(null);
+      onChange?.(false);
+    }, [onChange]);
+
+    const onOverlayLayout = useCallback(() => {
+      void measureViewInWindow(overlayRef).then((rect) => {
+        if (rect) setOverlay(rect);
+      });
+    }, []);
 
     useImperativeHandle(
       ref,
       () => ({
         open: () => {
-          void openTooltip()
+          void openTooltip();
         },
-        close: closeTooltip
+        close: closeTooltip,
       }),
-      [openTooltip, closeTooltip]
-    )
+      [openTooltip, closeTooltip],
+    );
 
     const onPressTrigger = useCallback(() => {
-      void openTooltip()
-    }, [openTooltip])
+      void openTooltip();
+    }, [openTooltip]);
 
     // Synchronous: measuring -> ready on first layout; from ready, only
     // re-layout when the content size actually changed (guards render loops).
     const onContentLayout = useCallback((event: LayoutChangeEvent) => {
-      const { width: contentWidth, height: contentHeight } = event.nativeEvent.layout
+      const { width: contentWidth, height: contentHeight } =
+        event.nativeEvent.layout;
 
-      setPhase(current => {
-        if (current.kind === 'closed') return current
+      setPhase((current) => {
+        if (current.kind === "closed") return current;
 
         if (
-          current.kind === 'ready' &&
-          Math.abs(current.content.width - contentWidth) <= CONTENT_SIZE_EPSILON &&
-          Math.abs(current.content.height - contentHeight) <= CONTENT_SIZE_EPSILON
+          current.kind === "ready" &&
+          Math.abs(current.content.width - contentWidth) <=
+            CONTENT_SIZE_EPSILON &&
+          Math.abs(current.content.height - contentHeight) <=
+            CONTENT_SIZE_EPSILON
         ) {
-          return current
+          return current;
         }
 
-        return { kind: 'ready', trigger: current.trigger, content: { width: contentWidth, height: contentHeight } }
-      })
-    }, [])
+        return {
+          kind: "ready",
+          trigger: current.trigger,
+          content: { width: contentWidth, height: contentHeight },
+        };
+      });
+    }, []);
 
     const layout = useMemo(() => {
-      if (phase.kind !== 'ready') return null
+      if (phase.kind !== "ready") return null;
 
       return layoutTooltip({
-        trigger: phase.trigger,
+        trigger: overlay
+          ? {
+              ...phase.trigger,
+              x: phase.trigger.x - overlay.x,
+              y: phase.trigger.y - overlay.y,
+            }
+          : phase.trigger,
         content: phase.content,
-        viewport,
+        // Clamp against the overlay's real size, not the window's, so the
+        // status/navigation bar insets cancel out on both axes.
+        viewport: overlay
+          ? { width: overlay.width, height: overlay.height }
+          : viewport,
         centerBy,
         arrowAlignment,
         width,
         preferred: position,
-        offset
-      })
-    }, [phase, viewport, centerBy, arrowAlignment, width, position, offset])
+        offset,
+      });
+    }, [
+      phase,
+      overlay,
+      viewport,
+      centerBy,
+      arrowAlignment,
+      width,
+      position,
+      offset,
+    ]);
 
-    const resolvedWidth = resolveWidth(viewport.width, width)
+    const resolvedWidth = resolveWidth(viewport.width, width);
 
     const boxStyle = layout
-      ? { left: layout.box.left, top: layout.box.top, width: layout.box.width, opacity: 1 }
-      : { width: resolvedWidth, height: 0, opacity: 0 }
+      ? {
+          left: layout.box.left,
+          top: layout.box.top,
+          width: layout.box.width,
+          opacity: 1,
+        }
+      : { width: resolvedWidth, height: 0, opacity: 0 };
 
     return (
       <View style={styles.wrapper}>
-        <Pressable ref={triggerRef} onPress={onPressTrigger} testID="tooltip-trigger">
+        <Pressable
+          ref={triggerRef}
+          onPress={onPressTrigger}
+          testID="tooltip-trigger"
+        >
           {children}
         </Pressable>
         <Modal transparent visible={visible} onRequestClose={closeTooltip}>
-          {phase.kind === 'closed' ? null : (
+          {phase.kind === "closed" ? null : (
             <Pressable
+              ref={overlayRef}
               accessible
               accessibilityRole="button"
               accessibilityLabel="Close tooltip"
               accessibilityViewIsModal
               onPress={closeTooltip}
+              onLayout={onOverlayLayout}
               style={styles.overlay}
               testID="tooltip-overlay"
             >
               <View
                 style={[styles.tooltip, boxStyle, { backgroundColor }]}
-                pointerEvents={layout ? 'auto' : 'none'}
+                pointerEvents={layout ? "auto" : "none"}
                 testID="tooltip-box"
               >
                 {layout ? (
                   <View
-                    style={[styles.arrow, { left: layout.arrow.left, top: layout.arrow.top }, arrowBorderStyle(layout.side, backgroundColor)]}
+                    style={[
+                      styles.arrow,
+                      { left: layout.arrow.left, top: layout.arrow.top },
+                      arrowBorderStyle(layout.side, backgroundColor),
+                    ]}
                     testID="tooltip-arrow"
                   />
                 ) : null}
-                <View onLayout={onContentLayout} testID="tooltip-content">{content}</View>
+                <View onLayout={onContentLayout} testID="tooltip-content">
+                  {content}
+                </View>
               </View>
             </Pressable>
           )}
         </Modal>
       </View>
-    )
-  }
-)
+    );
+  },
+);

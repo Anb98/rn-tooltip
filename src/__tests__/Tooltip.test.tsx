@@ -4,11 +4,12 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 
 import { Tooltip, TooltipRef } from '../Tooltip'
 import { TooltipPosition } from '../positioning'
-import { measureElement } from '../measure'
+import { measureElement, measureViewInWindow } from '../measure'
 
 jest.mock('../measure')
 
 const mockedMeasureElement = measureElement as jest.MockedFunction<typeof measureElement>
+const mockedMeasureViewInWindow = measureViewInWindow as jest.MockedFunction<typeof measureViewInWindow>
 
 const FIXED_TRIGGER = { x: 150, y: 400, width: 100, height: 40 }
 
@@ -27,6 +28,7 @@ const findBoxTop = (style: unknown): number | undefined => flattenStyle(style).t
 
 beforeEach(() => {
   mockedMeasureElement.mockResolvedValue(FIXED_TRIGGER)
+  mockedMeasureViewInWindow.mockResolvedValue(null)
 })
 
 afterEach(() => {
@@ -261,6 +263,29 @@ describe('Tooltip', () => {
     await waitFor(() => {
       expect(flattenStyle(getByTestId('tooltip-box').props.style).left).toBe(42)
     })
+  })
+
+  it('maps the trigger into overlay space when the modal content is inset (Android edge-to-edge)', async () => {
+    // Overlay content starts 63px below the window origin (status bar inset).
+    mockedMeasureViewInWindow.mockResolvedValue({ x: 0, y: 63, width: 750, height: 1271 })
+    const { getByTestId } = render(
+      <Tooltip content={<Text>content</Text>}>
+        <Text>trigger</Text>
+      </Tooltip>
+    )
+
+    fireEvent.press(getByTestId('tooltip-trigger'))
+    await waitFor(() => expect(getByTestId('tooltip-content')).toBeTruthy())
+    fireEvent(getByTestId('tooltip-content'), 'layout', layoutEvent(200, 100))
+
+    // Before the overlay is measured, layout falls back to raw window coords:
+    // trigger.y=400 -> top = 400 - content 100 - ARROW_LENGTH 10 = 290.
+    await waitFor(() => expect(findBoxTop(getByTestId('tooltip-box').props.style)).toBe(290))
+
+    fireEvent(getByTestId('tooltip-overlay'), 'layout', layoutEvent(750, 1271))
+
+    // Once measured, the inset is subtracted: (400 - 63) - 100 - 10 = 227.
+    await waitFor(() => expect(findBoxTop(getByTestId('tooltip-box').props.style)).toBe(227))
   })
 
   it('closes and fires onChange(false) when the platform back button triggers Modal onRequestClose', async () => {

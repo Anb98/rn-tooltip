@@ -1,32 +1,57 @@
-// Screenshot: edge-clamping.png — the trigger is pinned at the viewport's
-// far right edge. The box clamps inside the visible screen instead of
-// overflowing, while the arrow shifts to keep pointing at the trigger
-// (viewport clamping without a side flip).
-import { StyleSheet, Text, View } from 'react-native'
-import { Tooltip } from '@anb98/rn-tooltip'
+import { StyleSheet, Text, View } from "react-native";
+import { Tooltip } from "@anb98/rn-tooltip";
 
 export default function EdgeClamping() {
   return (
     <View style={styles.screen}>
-      <Tooltip content={<Text style={styles.tooltipText}>Clamped into the viewport</Text>} position="bottom">
-        <Text style={styles.trigger}>Edge</Text>
+      <Tooltip
+        position="bottom"
+        backgroundColor="#1F2937"
+        content={
+          <View style={styles.content}>
+            <Text style={styles.tooltipBody}>
+              Clamped inside the viewport — the arrow keeps pointing at the
+              trigger.
+            </Text>
+          </View>
+        }
+      >
+        <View style={styles.chip}>
+          <Text style={styles.chipText}>Edge</Text>
+        </View>
       </Tooltip>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     paddingTop: 40,
-    paddingRight: 12
+    paddingRight: 12,
+    backgroundColor: "#F9FAFB",
   },
-  trigger: {
-    fontSize: 16,
-    color: '#111827'
+  chip: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "white",
   },
-  tooltipText: {
-    color: 'white'
-  }
-})
+  chipText: {
+    color: "#111827",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  content: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  tooltipBody: {
+    color: "#E5E7EB",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});

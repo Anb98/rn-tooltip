@@ -1,37 +1,59 @@
-// Screenshot: demo.gif — hero interaction recording. No `position` prop, so
-// the tooltip picks the side with the most room automatically.
-import { StyleSheet, Text, View } from 'react-native'
-import { Tooltip } from '@anb98/rn-tooltip'
+import { StyleSheet, Text, View } from "react-native";
+import { Tooltip } from "@anb98/rn-tooltip";
 
 export default function Demo() {
   return (
     <View style={styles.screen}>
-      <Tooltip content={<Text style={styles.tooltipText}>Helpful hint</Text>}>
+      <Tooltip
+        backgroundColor="#1F2937"
+        content={
+          <View style={styles.content}>
+            <Text style={styles.tooltipTitle}>Helpful hint</Text>
+            <Text style={styles.tooltipBody}>
+              Positioned automatically where there is room.
+            </Text>
+          </View>
+        }
+      >
         <View style={styles.button}>
           <Text style={styles.buttonText}>Press me</Text>
         </View>
       </Tooltip>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
   },
   button: {
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: '#1F2937'
+    paddingHorizontal: 22,
+    borderRadius: 10,
+    backgroundColor: "#4F46E5",
   },
   buttonText: {
-    color: 'white',
-    fontWeight: '600'
+    color: "white",
+    fontSize: 15,
+    fontWeight: "600",
   },
-  tooltipText: {
-    color: 'white'
-  }
-})
+  content: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  tooltipTitle: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  tooltipBody: {
+    color: "#E5E7EB",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});
